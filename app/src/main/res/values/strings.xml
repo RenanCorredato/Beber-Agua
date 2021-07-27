@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BerberAgua</string>
+    <string name="hint">intervalo (min)</string>
+    <string name="notify">Notificar</string>
+    <string name="pause">Pausar</string>
+
+</resources>
