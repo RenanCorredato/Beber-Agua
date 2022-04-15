@@ -3,5 +3,6 @@
     <string name="hint">intervalo (min)</string>
     <string name="notify">Notificar</string>
     <string name="pause">Pausar</string>
+    <string name="error_interval">Digite o intervalo</string>
 
 </resources>

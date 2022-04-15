@@ -1,16 +1,14 @@
 package com.renancorredato
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.content.edit
-import androidx.core.view.get
+import androidx.appcompat.app.AppCompatActivity
 import com.renancorredato.databinding.ActivityMainBinding
-import kotlin.math.absoluteValue
 
 
 class MainActivity : AppCompatActivity() {
@@ -19,66 +17,78 @@ class MainActivity : AppCompatActivity() {
     private var activated: Boolean = false
 
 
+    companion object {
+        const val DB = "db"
+    }
+
+
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.tpTime.setIs24HourView(true)
-        val sharedPrefsPreferences = getSharedPreferences("db", Context.MODE_PRIVATE)
-        activated = sharedPrefsPreferences.getBoolean("activated", false)
+        var preferences: SharedPreferences = getSharedPreferences(DB, MODE_PRIVATE)
+        activated = preferences.getBoolean("activated", false)
+        if (activated) {
+            binding.let {
+                with(it) {
+                    activated = true
+                    btNotify.text = getString(R.string.pause)
+                    btNotify.setBackgroundColor(getColor(R.color.black))
+                }
+            }
+            val interval = preferences.getInt("interval", 0)
+            val hour = preferences.getInt("hour", binding.tpTime.hour)
+            val minute = preferences.getInt("minute", binding.tpTime.minute)
 
-        with(binding) {
-            if (activated) {
-                btNotify.setText(R.string.pause) // Modifica o nome do botão
-                btNotify.setBackgroundColor(getColor(R.color.black)) // Troca a cor do botão}
-
-                val interval  = sharedPrefsPreferences.getString("interval" , "")
-                val hour = sharedPrefsPreferences.getInt("hour",tpTime.hour)
-                val minute = sharedPrefsPreferences.getInt("minute", tpTime.minute)
-
-                etNumberInterval.setText(interval.toString())
-                tpTime.hour = hour
-                tpTime.minute = minute
+            binding.etNumberInterval.text.let {
+                interval
             }
 
-        }
+            binding.tpTime.hour = hour
+            binding.tpTime.minute = minute
 
+            binding.tpTime.setIs24HourView(true)
 
-        with(binding) {
-            btNotify.setOnClickListener {
-                val interval = etNumberInterval.text.toString()
-
-                if (interval.isEmpty()) { // Verificando se o campo esta vazio
-                    Toast.makeText(
-                        applicationContext, "Digite o intervalo", Toast.LENGTH_LONG
-                    )
+            binding.btNotify.setOnClickListener {
+                val sInterval = binding.etNumberInterval.text.toString()
+                if (sInterval.isEmpty()) {
+                    Toast.makeText(this, getString(R.string.error_interval), Toast.LENGTH_LONG)
                         .show()
+                    return@setOnClickListener
                 }
-
-                val hour = tpTime.hour
-                val minute = tpTime.minute
+                val hour = binding.tpTime.hour
+                val minute = binding.tpTime.minute
+                val interval = sInterval.toInt()
 
                 if (!activated) {
-                    btNotify.setText(R.string.pause) // Modifica o nome do botão
-                    btNotify.setBackgroundColor(getColor(R.color.black)) // Troca a cor do botão}
-                    activated = true
+                    binding.let {
+                        with(it) {
+                            activated = true
+                            btNotify.text = getString(R.string.pause)
+                            btNotify.setBackgroundColor(getColor(R.color.black))
+                        }
+                    }
 
-                    sharedPrefsPreferences.edit() {
+                    preferences.edit().apply {
                         putBoolean("activated", true)
-                        putString("interval", interval)
+                        putInt("interval", interval)
                         putInt("hour", hour)
                         putInt("minute", minute)
                         apply()
                     }
 
                 } else {
-                    btNotify.setText(R.string.notify) // Modifica o nome do botão
-                    btNotify.setBackgroundColor(getColor(R.color.teal_200))// Troca a cor do botão}
-                    activated = false
+                    binding.let {
+                        with(it) {
+                            activated = false
+                            btNotify.text = getString(R.string.notify)
+                            btNotify.setBackgroundColor(getColor(R.color.teal_200))
+                        }
+                    }
 
-                    sharedPrefsPreferences.edit() {
+                    preferences.edit().apply {
                         putBoolean("activated", false)
                         remove("interval")
                         remove("hour")
@@ -87,11 +97,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-
-
-
-                Log.e("Teste", "Horas:- $hour:$minute - $interval")
-
+                Log.d("teste", "hora:$hour minuto:$minute intervalo:$interval")
             }
         }
     }
